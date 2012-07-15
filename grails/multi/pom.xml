@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mycompany.grails</groupId>
+    <artifactId>sample</artifactId>
+    <version>1.0.3-SNAPSHOT</version>
+
+    <name>sample</name>
+    <description>
+        Sample Grails multi-module Maven project.
+    </description>
+
+    <!-- Multi-module projects must use POM packaging -->
+    <packaging>pom</packaging>
+
+    <!-- 
+    Define the Grails version and any other properties that
+    all shared projects should utilize.
+    -->
+    <properties>
+        <grails.version>2.1.0</grails.version>
+    </properties>
+
+    <!-- Define the list of modules/children to build -->
+    <modules>
+        <module>plugin-a</module>
+        <module>plugin-b</module>
+        <module>test</module>
+    </modules>
+
+    <!--
+    Define the list of dependencies and their configuration
+    that may be used by other projects...these are just
+    templates defining the version, scope, etc
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.grails</groupId>
+                <artifactId>grails-dependencies</artifactId>
+                <version>${grails.version}</version>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.grails</groupId>
+                <artifactId>grails-plugin-testing</artifactId>
+                <version>${grails.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!--
+    Add the core Grails dependencies to all children modules
+    so they do not need to explicitly include them.  Note that
+    the version and scope is pulled from the dependencyManagement
+    section above.
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>org.grails</groupId>
+            <artifactId>grails-dependencies</artifactId>
+            <type>pom</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.grails</groupId>
+            <artifactId>grails-plugin-testing</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!--
+    Define the build lifecycle and plugins for executing Grails
+    applications.
+    -->
+    <build>
+        <plugins>
+            <!-- 
+            Disable the Maven surefire plugin for Grails applications, 
+            as we have our own test runner 
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>surefire-it</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!--
+            Make sure to remove Grails-generated directories and files
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>plugins</directory>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+            <!--
+            Add the Grails Maven plugin to handle the custom Grails
+            build lifecycle and plugins.
+            -->
+            <plugin>
+                <groupId>org.grails</groupId>
+                <artifactId>grails-maven-plugin</artifactId>
+                <version>${grails.version}</version>
+                <configuration>
+                    <fork>true</fork>
+                </configuration>
+                <extensions>true</extensions>
+            </plugin>
+
+            <!--
+            Add a search and replace plugin for Grails plugins to replace
+            the version in the plugin descriptor files if one exists.  This
+            must be placed in the validate phase to execute before the
+            Grails validation plugin.
+            -->
+            <plugin>
+                   <groupId>com.google.code.maven-replacer-plugin</groupId>
+                   <artifactId>replacer</artifactId>
+                   <version>1.5.0</version>
+                   <executions>
+                       <execution>
+                           <phase>validate</phase>
+                           <goals>
+                               <goal>replace</goal>
+                           </goals>
+                       </execution>
+                   </executions>
+                   <configuration>
+                    <filesToInclude>*GrailsPlugin.groovy</filesToInclude>
+                    <replacements>
+                        <replacement>
+                            <token>/\*\s*@@VERSION@@\s*\*/\s*".*"\s*/\*\s*@@VERSION@@\s*\*/</token>
+                            <value>/* @@VERSION@@ */ "${project.version}" /* @@VERSION@@ */</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
+    
+            <!--
+            Add the Maven release plugin to ensure we commit the
+            updates to the application.properties and plugin
+            descriptors that get updated with each build.
+            -->
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <goals>clean install</goals>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <preparationGoals>
+                        clean verify scm:checkin -Dmessage="perform release"
+                    </preparationGoals>
+                    <completionGoals>
+                        package scm:checkin -Dmessage="prepare for next release"
+                    </completionGoals>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+    Define the source control management configuration. This is required for the release plugin to work.
+    -->
+    <!--
+    <scm>
+        <connection>scm:git:file://localhost/Users/.../multi</connection>
+        <developerConnection>scm:git:file://localhost/Users/.../multi</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    -->
+    
+    <!--
+    Define the Grails repositories for pulling in Grails resources
+    and plugins.
+    -->
+    <repositories>
+        <repository>
+            <id>grails</id>
+            <name>grails</name>
+            <url>http://repo.grails.org/grails/core</url>
+        </repository>
+        <repository>
+            <id>grails-plugins</id>
+            <name>grails-plugins</name>
+            <url>http://repo.grails.org/grails/plugins</url>
+        </repository>
+    </repositories>
+
+    <profiles>
+        <!-- Define a profile for activating the Java Tools -->
+        <profile>
+            <id>tools</id>
+            <activation>
+                <property>
+                    <name>java.vendor</name>
+                    <value>Sun Microsystems Inc.</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
+                    <version>${java.version}</version>
+                    <scope>system</scope>
+                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <!-- 
+        Provide overriding plugin execution points to handle Grails plugins 
+        that contain a grails.plugin file.
+        -->
+        <profile>
+            <id>grails-plugin</id>
+            <activation>
+                <file>
+                    <exists>grails.plugin</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                     <plugin>
+                        <groupId>org.grails</groupId>
+                        <artifactId>grails-maven-plugin</artifactId>
+                        <version>${grails.version}</version>
+                        <configuration>
+                            <fork>true</fork>
+                        </configuration>
+                        <extensions>true</extensions>
+                        <executions>
+                            <!-- 
+                            Run the validation in the initialize phase so the
+                            version replacement plugin can run during the
+                            validate phase first
+                            -->
+                            <execution>
+                                <id>default-validate-plugin</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>validate-plugin</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.mycompany.grails</groupId>
+        <artifactId>sample</artifactId>
+        <version>1.0.3-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>plugin-b</artifactId>
+
+    <name>plugin-b</name>
+    <description>
+        Sample Grails plugin for ...
+    </description>
+
+    <!-- Define the packaging as a Grails plugin -->
+    <packaging>grails-plugin</packaging>
+
+    <!--
+    Define the list of dependencies required for this
+    particular plugin.
+    -->
+    <dependencies>
+    
+    </dependencies>
+
+</project>

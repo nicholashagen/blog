@@ -1,0 +1,8 @@
+release.properties
+*.releaseBackup
+.classpath
+.project
+.settings
+target
+plugins
+plugin.xml
